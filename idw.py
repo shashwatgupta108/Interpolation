@@ -1,8 +1,20 @@
+import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
+
+def distance(Xi, Yi, Xc, Yc):
+    radius = 6371  # km
+    dlat = math.radians(Xi - Xc)
+    dlon = math.radians(Yi - Yc)
+
+    a = math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(math.radians(Xc)) * math.cos(math.radians(Xi)) * math.sin(
+        dlon / 2) * math.sin(dlon / 2)
+    c = 2*math.atan2(math.sqrt(a),math.sqrt(1-a))
+    d = radius * c
+    return d
 
 def interpolation(Xc, Yc, V, Xi, Yi, w, r=1, c=1):
     if r == 1 and c == 1:
@@ -10,7 +22,7 @@ def interpolation(Xc, Yc, V, Xi, Yi, w, r=1, c=1):
         Sum = 0
         weight = 0
         for k in range(len(Xc)):
-            d = np.sqrt(((Xi - Xc[k]) ** 2) + ((Yi - Yc[k]) ** 2))
+            d = distance(Xi,Yi,Xc[k],Yc[k])
             Sum = Sum + V[k] * (d ** w)
             weight = weight + (d ** w)
             value = Sum / weight
@@ -22,7 +34,7 @@ def interpolation(Xc, Yc, V, Xi, Yi, w, r=1, c=1):
                 Sum = 0
                 weight = 0
                 for k in range(len(Xc)):
-                    d = np.sqrt(((Xi[i] - Xc[k]) ** 2) + ((Yi[j] - Yc[k]) ** 2))
+                    d = distance(Xi[i],Yi[j],Xc[k],Yc[k])
                     Sum = Sum + V[k] * (d ** w)
                     weight = weight + (d ** w)
                     values[i][j] = Sum / weight
@@ -44,15 +56,15 @@ rainfall = data['ANN']
 # Yi = np.linspace(Ymin, Ymax, c)
 # w = -2
 
-## Split, train and test
+# Split, train and test
 X_train, X_test, Y_train, Y_test, rainfall_train, rainfall_test = train_test_split(x_coordinates, y_coordinates,
                                                                                    rainfall, test_size=0.2)
 X_train = list(X_train)
 Y_train = list(Y_train)
 rainfall_train = list(rainfall_train)
 Vi = interpolation(X_train, Y_train, rainfall_train, X_test, Y_test, -2)
-error = abs(rainfall_test-Vi)
-accuracy = (1-((error)/rainfall_test))*100
+error = abs(rainfall_test - Vi)
+accuracy = (1 - ((error) / rainfall_test)) * 100
 print(accuracy)
 print(Vi)
 print(rainfall_test)
